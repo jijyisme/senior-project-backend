@@ -4,32 +4,34 @@ from nlp_tools import serializers
 from thai_nlp_platform.Tokenizer.model import Tokenizer 
 from thai_nlp_platform.Word2Vec.model import WordEmbedder
 from thai_nlp_platform.ner.model import NamedEntityRecognizer
-
+from thai_nlp_platform.POS.pos_tagger import POSTagger
 from thai_nlp_platform.utils import utils
 from thai_nlp_platform.utils import co as constant
 from thai_nlp_platform.utils import loader
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from keras.preprocessing.sequence import pad_sequences
 # from django.views.decorators.csrf import csrf_exempt
-
+tokenizer = Tokenizer()
+word_embedder = WordEmbedder()
+ner_model = NamedEntityRecognizer(model_path='thai_nlp_platform/ner/models/test.h5',max_num_words = 500, word_vec_length=100)
+pos_model = POSTagger(model_path='thai_nlp_platform/POS/models/model.h5')
 
 def tokenize(text):
-    tokenizer = Tokenizer()
-    word_list = tokenizer.predict(text)
-    return word_list
+    return tokenizer.predict(text)
 
-def vectorize(word_list):
-    print('word_list', word_list)
-    word_embedder = WordEmbedder()
-    vector_list = word_embedder.predict(word_list)
-    print('vector_list',vector_list)
-    return vector_list
+def vectorize(word):    
+    return word_embedder.predict(word)
 
 def tag(model, vector_list):
     result = model.predict([vector_list])
     return result
-
+def pad(raw_y_train, max_num_words):
+    padded_y_train = []
+    for y in raw_y_train :
+        padded_y_train.append((y+([0]*max_num_words))[0:max_num_words])
+    return padded_y_train
 @api_view(['POST'])
 def get_token(request):
     if request.method == 'POST':
@@ -43,7 +45,9 @@ def get_token(request):
 def get_vector(request):
     if request.method == 'POST':
         word_list = tokenize(request.data['text'])
-        vector_list = vectorize(word_list)
+        vector_list = []
+        for w in word_list:
+            vector_list.append(vectorize(w))
         word_vector = models.WordVector(vector_list=vector_list)
         word_vector.save()
         serializer = serializers.WordVectorSerializer(word_vector)
@@ -52,24 +56,35 @@ def get_vector(request):
 @api_view(['POST'])
 def get_ner(request):
     if request.method == 'POST':
-        corpus = utils.TextCollection(corpus_directory='./data/BEST_mock/',
-                              tokenize_function = None, 
-                              word_delimiter='|', 
-                              tag_delimiter='/', 
-                              tag_dictionary = {'word': 0,'pos': 1,'ner': 2} 
-                             )
-        tag_index = utils.index_builder(constant.NE_LIST, constant.TAG_START_INDEX)
-        rev_tag_index = utils.index_builder(constant.NE_LIST, constant.TAG_START_INDEX, reverse=True)
-        vs = utils.build_input(corpus=corpus,tag_index=tag_index,num_step=300
-                               ,vectorize_function=WordEmbedder().predict,needed_y='ner')
-        print('shape',vs.x.shape)
-        print(vs.x)
-        # ner = NamedEntityRecognizer(model_path='thai_nlp_platform/ner/models/ner005.h5',max_num_words = 300, word_vec_length=100)
-        # y_pred = ner.predict(vs.x)
-        # y_pred_decode = loader.decode_tag(y_pred, rev_tag_index)
-        # tagged = models.Token(tag_list=y_pred_decode)
-        # tagged.save()
-        # serializer = serializers.TokenSerializer(tagged)
-        # return Response(serializer.data, status=status.HTTP_200_OK)
-
-
+        word_list = tokenize(request.data['text'])
+        text_len = len(word_list)
+        vector_list = []
+        for w in word_list:
+            vector_list.append(vectorize(w).tolist())
+        x = pad_sequences([vector_list],maxlen=500,value=[0]*100)
+        y_pred = [ner_model.predict(x)[0][0:text_len]]
+        rev_tag_index = utils.index_builder(constant.NE_LIST, start_index=1, reverse=True)
+        y_pred_decode = loader.decode_tag(y_pred, rev_tag_index)
+        tagged = models.TaggedToken(token_list = word_list,ner_list=y_pred_decode[0])
+        tagged.save()
+        serializer = serializers.TaggedTokenSerializer(tagged)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+import numpy as np
+@api_view(['POST'])
+def get_pos(request):
+    if request.method == 'POST':
+        word_list = tokenize(request.data['text'])
+        text_len = len(word_list)
+        vector_list = []
+        for w in word_list:
+            vector_list.append(vectorize(w).tolist())
+        x = pad_sequences([vector_list],maxlen=500,value=[0]*100)
+        y_pred = pos_model.predict(x)
+        rev_tag_index = utils.index_builder(constant.TAG_LIST, start_index=1, reverse=True)
+        y = []
+        for tag_idx in y_pred['pos_tag'][0:text_len]:
+            y.append(rev_tag_index[tag_idx])
+        tagged = models.TaggedToken(token_list = word_list,tag_list=y)
+        tagged.save()
+        serializer = serializers.TaggedTokenSerializer(tagged)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -6,5 +6,7 @@ class Token(models.Model):
 
 class WordVector(models.Model):
 	vector_list = models.TextField()
-    # def get_vector_list(self):
-    # 	return self.vector_list
+
+class TaggedToken(models.Model):
+	token_list = models.TextField()
+	tag_list = models.TextField()

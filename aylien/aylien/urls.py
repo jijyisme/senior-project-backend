@@ -12,5 +12,7 @@ urlpatterns = [
     # url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^tokenize', views.get_token),
     url(r'^vectorize', views.get_vector),
-    url(r'^ner', views.get_ner)
+    url(r'^ner', views.get_ner),
+    url(r'^pos', views.get_pos)
+
 ]
