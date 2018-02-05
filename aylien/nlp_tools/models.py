@@ -1,12 +1,23 @@
 from django.db import models
-import json
 
-class Token(models.Model):
-    word_list = models.TextField()
 
-class WordVector(models.Model):
+class StringList(models.Model):
+    string_list = models.TextField()
+
+class VectorList(models.Model):
+	string_list = models.TextField()
 	vector_list = models.TextField()
 
 class TaggedToken(models.Model):
 	token_list = models.TextField()
 	tag_list = models.TextField()
+
+class VectorDistance(models.Model):
+	w1 = models.TextField()
+	w2 = models.TextField()
+	distance = models.TextField()
+
+class VectorDistanceList(models.Model):
+	string_list = models.TextField()
+	vector_list = models.TextField()
+	distances = models.TextField()

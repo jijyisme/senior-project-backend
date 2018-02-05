@@ -1,1 +1,0 @@
-# Thai_NLP_platform
