@@ -56,25 +56,21 @@ def vectorize(word_list):
     #     return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
 def crawl_webpage(url_in):
-   with urllib.request.urlopen(url_in) as url:
-       html = url.read()
-   soup = BeautifulSoup(html, 'html.parser')
+    with urllib.request.urlopen(url_in) as url:
+        html = url.read()
+        soup = BeautifulSoup(html, 'html.parser')
    
    # remove all script and style elements
-   for script in soup(['script', 'style']):
-       script.extract()  # rip it out
-   
-   p_tag_lists = [p_tag.text for p_tag in soup.findAll('p')]
-   
-   max_len = 0
-   max_len_text = ''
-   
-   for p_tag in p_tag_lists:
-       if len(p_tag) > max_len:
-           max_len = len(p_tag)
-           max_len_text = p_tag
-
-   return max_len_text
+    for script in soup(['script', 'style']):
+        script.extract()  # rip it out
+    
+    p_tag_lists=''
+    for p_tag in soup.findAll('p','div'):
+        t = p_tag.text
+        if(len(t) >= 250):
+            p_tag_lists=p_tag_lists+'\n'+t
+    print('crawled words',p_tag_lists)
+    return p_tag_lists
 
 @api_view(['POST'])
 def get_token(request):
@@ -88,7 +84,7 @@ def get_token(request):
             input_string = crawl_webpage(url)
 
         #reject too long string
-        if len(input_string) > 1000:
+        if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         #tokenize the input
