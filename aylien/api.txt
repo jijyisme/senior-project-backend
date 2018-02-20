@@ -2,7 +2,12 @@ POST | http://localhost:8000/tokenize/
 
 Request Body
 {
-	"text": "ข้อความที่อยากจะตัด"
+	"text": "ข้อความที่อยากจะตัด”,
+	"type": "raw_text"
+}
+{
+	“url”: "https://www.thairath.co.th/content/1197912#cxrecs_s”,
+	"type": “webpage”
 }
 Response
 {
@@ -20,7 +25,11 @@ POST | http://localhost:8000/vectorize/
 Request Body
 {
 	"text": "ฉันสวย",
-    "type": "raw_text"
+    	"type": "raw_text"
+}
+{
+	“url”: "https://www.thairath.co.th/content/1197912#cxrecs_s”,
+	"type": “webpage”
 }
 Response
 {
@@ -55,7 +64,12 @@ POST | http://localhost:8000/ner/
 
 Request Body
 {
-    "text": "ตำรวจพบผู้ต้องสงสัยที่สถานี"
+	"text": "ตำรวจพบผู้ต้องสงสัยที่สถานี”,
+	"type": “raw_text”
+}
+{
+	“url”: "https://www.thairath.co.th/content/1197912#cxrecs_s”,
+	"type": “webpage”
 }
 Response
 {
@@ -84,7 +98,12 @@ POST | http://localhost:8000/pos/
 
 Request Body
 {
-    "text": "ตำรวจพบผู้ต้องสงสัยที่สถานี"
+	"text": "ตำรวจพบผู้ต้องสงสัยที่สถานี”,
+	"type": “raw_text”
+}
+{
+	“url”: "https://www.thairath.co.th/content/1197912#cxrecs_s”,
+	"type": “webpage”
 }
 Response
 {

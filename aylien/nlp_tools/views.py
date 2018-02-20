@@ -21,7 +21,7 @@ import urllib.request
 # from django.views.decorators.csrf import csrf_exempt
 tokenizer = Tokenizer()
 word_embedder = WordEmbedder()
-ner_model = NamedEntityRecognizer(model_path='thai_nlp_platform/ner/models/test.h5',max_num_words = 500, word_vec_length=100)
+ner_model = NamedEntityRecognizer(model_path='thai_nlp_platform/ner/models/ner_bi-lstm_014.h5',max_num_words = 500, word_vec_length=100)
 pos_model = POSTagger(model_path='thai_nlp_platform/POS/models/model.h5')
 
 def tokenize(text):
@@ -65,13 +65,20 @@ def crawl_webpage(url_in):
         script.extract()  # rip it out
     
     p_tag_lists=''
-    for p_tag in soup.findAll('p','div'):
-        t = p_tag.text
-        if(len(t) >= 250):
-            p_tag_lists=p_tag_lists+'\n'+t
-    print('crawled words',p_tag_lists)
+    for p_tag in soup.findAll(['p','h1','h2']):
+        t = p_tag.text.replace('\n','').replace(' ','')
+        if(len(t) >= 200):
+            p_tag_lists=p_tag_lists+' \n'+t
+    print('crawled words',type(p_tag_lists))
     return p_tag_lists
-
+def decode_tag(y_pred, rev_tag_index):
+    y_pred_decode = []
+    for post in y_pred:
+        temp = []
+        for i in range(len(post)):
+            temp.append(rev_tag_index[np.argmax(post[i])])
+        y_pred_decode.append(temp)
+    return y_pred_decode
 @api_view(['POST'])
 def get_token(request):
     if request.method == 'POST':
@@ -107,7 +114,7 @@ def get_vector(request):
             input_string = crawl_webpage(url)
             
         #reject too long string
-        if len(input_string) > 1000:
+        if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         #tokenize&vectorize the input
@@ -135,7 +142,7 @@ def get_ner(request):
             input_string = crawl_webpage(url)
             
         #reject too long string
-        if len(input_string) > 1000:
+        if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
             
         #tokenize&vectorize the input
@@ -143,9 +150,19 @@ def get_ner(request):
         text_len = len(word_list)
         vector_list = vectorize(word_list)
         x = pad_sequences([vector_list],maxlen=500,value=[0]*100)
+        # corpus = utils.TextCollection(corpus_directory='./',
+        #                       tokenize_function = tokenize
+        #                      )
+        # corpus.add_text(content = input_string)
+        # word_list = corpus.get_token_list(0)
+        # text_len = len(word_list)
+        # vector_list = vectorize(word_list)
+        # x = pad_sequences([vector_list],maxlen=500,value=[0]*100)
         y_pred = [ner_model.predict(x)[0][0:text_len]]
-        rev_tag_index = utils.index_builder(constant.NE_LIST, start_index=1, reverse=True)
+        rev_tag_index = utils.index_builder(constant.NE_LIST, start_index=0, reverse=True)
+        print('y_pred',y_pred)
         y_pred_decode = loader.decode_tag(y_pred, rev_tag_index)
+        print('y_pred_Decode',y_pred_decode)
         tagged = models.TaggedToken(token_list = word_list,tag_list=y_pred_decode[0])
         tagged.save()
         serializer = serializers.TaggedTokenSerializer(tagged)
@@ -163,7 +180,7 @@ def get_pos(request):
             input_string = crawl_webpage(url)
             
         #reject too long string
-        if len(input_string) > 1000:
+        if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
             
         #tokenize&vectorize the input
