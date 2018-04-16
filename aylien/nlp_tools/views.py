@@ -158,6 +158,7 @@ def get_token(request):
             input_string = request.data['text']
 
         elif request.data['type'] == 'webpage':
+            print("Crawl website!")
             url = request.data['url']
             input_string = crawl_webpage(url)
 
@@ -165,6 +166,7 @@ def get_token(request):
         if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
+        print(input_string)
         # tokenize the input
         word_list = tokenize(input_string)
         # serialize output
@@ -223,13 +225,31 @@ def get_categorization(request):
         vs = utils.build_input(texts, categorization_word_index,
                                categorization_tag_index, categorization_constant.SEQUENCE_LENGTH,
                                needed_y='categorization', for_train=False)
-        decoded_y = categorization_model.predict(vs.x,
-                                                 thershold_selection="../../Thai_NLP_platform/Bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json",
-                                                 decode_tag=True)
+        y = categorization_model.predict(vs.x,
+                                         #  thershold_selection="../../Thai_NLP_platform/Bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json",
+                                         decode_tag=False)
+        categorization_inv_map = {v: k for k,
+                                  v in categorization_tag_index.items()}
+        thershold_selection_dict = json.load(open(
+            "../../Thai_NLP_platform/Bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json"))
+        decoded_y_list = []
+        confidence_list = []
+        for idx, confidence in enumerate(y[0]):
+            thershold = thershold_selection_dict['class_{}'.format(idx)]
+            if (confidence > thershold):
+                # decoded_y[categorization_inv_map[idx]] = confidence
+                decoded_y_list.append(categorization_inv_map[idx])
+                confidence_list.append(confidence)
+        confidence_list, decoded_y_list = (list(t) for t in zip(
+            *sorted(zip(confidence_list, decoded_y_list))))
         # serialize output
-        out = models.StringList(string_list=decoded_y[0])
+        # out = models.StringList(string_list=decoded_y[0])
+        # out.save()
+        # serializer = serializers.StringListSerializer(out)
+        out = models.SimilarityList(
+            string_list=decoded_y_list, similarity_list=confidence_list)
         out.save()
-        serializer = serializers.StringListSerializer(out)
+        serializer = serializers.SimilarityListSerializer(out)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -254,11 +274,25 @@ def get_sentiment(request):
         vs = utils.build_input(texts, sentiment_word_index,
                                sentiment_tag_index, sentiment_constant.SEQUENCE_LENGTH,
                                needed_y='sentiment', for_train=False)
-        decoded_y = sentiment_model.predict(vs.x, decode_tag=True)
+
+        sentiment_inv_map = {v: k for k, v in sentiment_tag_index.items()}
+        y = sentiment_model.predict(vs.x, decode_tag=False)
+        decoded_y_list = []
+        confidence_list = []
+        for idx, confidence in enumerate(y[0]):
+            # decoded_y[sentiment_inv_map[idx]] = confidence
+            decoded_y_list.append(sentiment_inv_map[idx])
+            confidence_list.append(confidence)
+        confidence_list, decoded_y_list = (list(t) for t in zip(
+            *sorted(zip(confidence_list, decoded_y_list))))
         # serialize output
-        out = models.StringList(string_list=decoded_y)
+        # out = models.StringList(string_list=decoded_y)
+        # out.save()
+        # serializer = serializers.StringListSerializer(out)
+        out = models.SimilarityList(
+            string_list=decoded_y_list, similarity_list=confidence_list)
         out.save()
-        serializer = serializers.StringListSerializer(out)
+        serializer = serializers.SimilarityListSerializer(out)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -375,17 +409,23 @@ def get_tag_list(request):
 def get_distance_list(request):
     if request.method == 'POST':
         word_list = request.data['word_list'][1:-1].split(',')
+        print(request.data['word_list'])
         word_list = [x.strip() for x in word_list]
+        print(word_list)
         vector_list = vectorize(word_list)
         rounded_vector_list = [round_up(x) for x in vector_list]
         l = []
+        distance_dict = {}
         for i in range(len(word_list)):
             for j in range(i + 1, len(word_list)):
-                d = calculate_distance(vector_list[i], vector_list[j])
-                vd = models.VectorDistance(
-                    w1=word_list[i], w2=word_list[j], distance=d)
-                vd.save()
-                l.append(vd)
+                # d = calculate_distance(vector_list[i], vector_list[j])
+                d = w2v_model.model.wv.similarity(word_list[i], word_list[j])
+                distance_dict[(word_list[i], word_list[j])] = d
+
+        for pair, d in sorted(distance_dict.items(), key=lambda x: x[1], reverse=True):
+            vd = models.VectorDistance(w1=pair[0], w2=pair[1], distance=d)
+            vd.save()
+            l.append(vd)
 
         word_vector = models.VectorDistanceList(
             string_list=word_list, vector_list=rounded_vector_list, distances=l)
