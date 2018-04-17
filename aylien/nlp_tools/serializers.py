@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from nlp_tools.models import StringList, VectorList, VectorDistanceList
+from nlp_tools.models import StringList, VectorList, VectorDistanceList, ConfidenceTagList
 
 
 class StringListSerializer(serializers.Serializer):
@@ -29,6 +29,28 @@ class SimilarityListSerializer(serializers.Serializer):
         instance.similarity_list = validated_data
         instance.save()
         return instance
+
+
+class ConfidenceTagSerializer(serializers.Serializer):
+    tag = serializers.CharField()
+    confidence = serializers.FloatField()
+
+
+class ConfidenceTagListSerializer(serializers.ModelSerializer):
+    confidence_tag_list = serializers.ListField(
+        child=ConfidenceTagSerializer(),  min_length=None, max_length=None)
+
+    def create(self, validated_data):
+        return ConfidenceTagList.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.confidence_tag_list = validated_data
+        instance.save()
+        return instance
+
+    class Meta:
+        model = ConfidenceTagList
+        fields = ['confidence_tag_list']
 
 
 class VectorListSerializer(serializers.Serializer):

@@ -15,6 +15,15 @@ class SimilarityList(models.Model):
     similarity_list = models.TextField()
 
 
+class ConfidenceTag(models.Model):
+    tag = models.TextField()
+    confidence = models.FloatField()
+
+
+class ConfidenceTagList(models.Model):
+    confidence_tag_list = models.TextField()
+
+
 class TaggedToken(models.Model):
     token_list = models.TextField()
     tag_list = models.TextField()

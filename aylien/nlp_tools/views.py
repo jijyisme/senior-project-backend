@@ -234,22 +234,28 @@ def get_categorization(request):
             "../../Thai_NLP_platform/Bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json"))
         decoded_y_list = []
         confidence_list = []
-        for idx, confidence in enumerate(y[0]):
+        for idx, value in enumerate(y[0]):
             thershold = thershold_selection_dict['class_{}'.format(idx)]
-            if (confidence > thershold):
-                # decoded_y[categorization_inv_map[idx]] = confidence
+            if (value > thershold):
                 decoded_y_list.append(categorization_inv_map[idx])
+                confidence = (value - thershold)/(1-thershold)
                 confidence_list.append(confidence)
+                # print(categorization_inv_map[idx], confidence)
+                # print(thershold, idx)
+        # Norm confidence list to be range of 0 to 1
         confidence_list, decoded_y_list = (list(t) for t in zip(
             *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
-        # serialize output
-        # out = models.StringList(string_list=decoded_y[0])
-        # out.save()
-        # serializer = serializers.StringListSerializer(out)
-        out = models.SimilarityList(
-            string_list=decoded_y_list, similarity_list=confidence_list)
+
+        confidence_tag_list = []
+        for idx, confidence in enumerate(confidence_list):
+            confidence_tag = models.ConfidenceTag(
+                tag=decoded_y_list[idx], confidence=confidence)
+            confidence_tag.save()
+            confidence_tag_list.append(confidence_tag)
+        out = models.ConfidenceTagList(
+            confidence_tag_list=confidence_tag_list)
         out.save()
-        serializer = serializers.SimilarityListSerializer(out)
+        serializer = serializers.ConfidenceTagListSerializer(out)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
