@@ -241,7 +241,7 @@ def get_categorization(request):
                 decoded_y_list.append(categorization_inv_map[idx])
                 confidence_list.append(confidence)
         confidence_list, decoded_y_list = (list(t) for t in zip(
-            *sorted(zip(confidence_list, decoded_y_list))))
+            *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
         # serialize output
         # out = models.StringList(string_list=decoded_y[0])
         # out.save()
@@ -284,7 +284,9 @@ def get_sentiment(request):
             decoded_y_list.append(sentiment_inv_map[idx])
             confidence_list.append(confidence)
         confidence_list, decoded_y_list = (list(t) for t in zip(
-            *sorted(zip(confidence_list, decoded_y_list))))
+            *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
+        print(confidence_list)
+        print(decoded_y_list)
         # serialize output
         # out = models.StringList(string_list=decoded_y)
         # out.save()
