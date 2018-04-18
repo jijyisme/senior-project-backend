@@ -417,9 +417,7 @@ def get_tag_list(request):
 def get_distance_list(request):
     if request.method == 'POST':
         word_list = request.data['word_list'][1:-1].split(',')
-        print(request.data['word_list'])
         word_list = [x.strip() for x in word_list]
-        print(word_list)
         vector_list = vectorize(word_list)
         rounded_vector_list = [round_up(x) for x in vector_list]
         l = []
