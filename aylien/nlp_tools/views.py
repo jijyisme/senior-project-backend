@@ -161,6 +161,8 @@ def get_token(request):
             print("Crawl website!")
             url = request.data['url']
             input_string = crawl_webpage(url)
+            if input_string == "":
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -186,6 +188,8 @@ def get_vector(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
+            if input_string=="":
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -214,6 +218,8 @@ def get_categorization(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
+            if input_string=="":
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -269,6 +275,8 @@ def get_sentiment(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
+            if input_string=="":
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -289,18 +297,28 @@ def get_sentiment(request):
             # decoded_y[sentiment_inv_map[idx]] = confidence
             decoded_y_list.append(sentiment_inv_map[idx])
             confidence_list.append(confidence)
+
         confidence_list, decoded_y_list = (list(t) for t in zip(
             *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
-        print(confidence_list)
-        print(decoded_y_list)
+            
+        confidence_tag_list = []
+        for idx, confidence in enumerate(confidence_list):
+            confidence_tag = models.ConfidenceTag(
+                tag=decoded_y_list[idx], confidence=confidence)
+            confidence_tag.save()
+            confidence_tag_list.append(confidence_tag)
+        out = models.ConfidenceTagList(
+            confidence_tag_list=confidence_tag_list)
+        out.save()
+        serializer = serializers.ConfidenceTagListSerializer(out)
         # serialize output
         # out = models.StringList(string_list=decoded_y)
         # out.save()
         # serializer = serializers.StringListSerializer(out)
-        out = models.SimilarityList(
-            string_list=decoded_y_list, similarity_list=confidence_list)
-        out.save()
-        serializer = serializers.SimilarityListSerializer(out)
+        # out = models.SimilarityList(
+        #     string_list=decoded_y_list, similarity_list=confidence_list)
+        # out.save()
+        # serializer = serializers.SimilarityListSerializer(out)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -315,6 +333,8 @@ def get_ner(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
+            if input_string=="":
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -348,6 +368,8 @@ def get_pos(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
+            if input_string=="":
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -380,6 +402,8 @@ def get_keyword_expansion(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
+            if input_string=="":
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
