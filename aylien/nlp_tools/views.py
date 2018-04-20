@@ -188,7 +188,7 @@ def get_vector(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
-            if input_string=="":
+            if input_string == "":
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
@@ -218,7 +218,7 @@ def get_categorization(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
-            if input_string=="":
+            if input_string == "":
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
@@ -275,7 +275,7 @@ def get_sentiment(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
-            if input_string=="":
+            if input_string == "":
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
@@ -300,7 +300,7 @@ def get_sentiment(request):
 
         confidence_list, decoded_y_list = (list(t) for t in zip(
             *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
-            
+
         confidence_tag_list = []
         for idx, confidence in enumerate(confidence_list):
             confidence_tag = models.ConfidenceTag(
@@ -311,14 +311,6 @@ def get_sentiment(request):
             confidence_tag_list=confidence_tag_list)
         out.save()
         serializer = serializers.ConfidenceTagListSerializer(out)
-        # serialize output
-        # out = models.StringList(string_list=decoded_y)
-        # out.save()
-        # serializer = serializers.StringListSerializer(out)
-        # out = models.SimilarityList(
-        #     string_list=decoded_y_list, similarity_list=confidence_list)
-        # out.save()
-        # serializer = serializers.SimilarityListSerializer(out)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -333,7 +325,7 @@ def get_ner(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
-            if input_string=="":
+            if input_string == "":
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
@@ -368,7 +360,7 @@ def get_pos(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
-            if input_string=="":
+            if input_string == "":
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
@@ -402,7 +394,7 @@ def get_keyword_expansion(request):
         elif request.data['type'] == 'webpage':
             url = request.data['url']
             input_string = crawl_webpage(url)
-            if input_string=="":
+            if input_string == "":
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
