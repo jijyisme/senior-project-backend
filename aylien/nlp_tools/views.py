@@ -39,7 +39,7 @@ import pickle
 
 # from django.views.decorators.csrf import csrf_exempt
 
-# Tokenizer
+Tokenizer
 tokenizer_model = Tokenizer()
 tokenizer_char_index = utils.build_tag_index(
     tokenizer_constant.CHARACTER_LIST, tokenizer_constant.CHAR_START_INDEX)
@@ -65,7 +65,7 @@ ner_tag_index = utils.build_tag_index(
     ner_constant.TAG_LIST, start_index=ner_constant.TAG_START_INDEX)
 
 # Sentiment
-sentiment_model = SentimentAnalyzer()
+sentiment_model = SentimentAnalyzer(model_path='../../Thai_NLP_platform/Bailarn/sentiment/models/cnn_multi_2tag_e3.h5')
 sentiment_word_index = pickle.load(
     open('../../Thai_NLP_platform/Bailarn/sentiment/word_index.pickle', 'rb'))
 sentiment_word_index.pop('<UNK>', None)
@@ -73,7 +73,7 @@ sentiment_word_index['UNK'] = len(sentiment_word_index)
 sentiment_tag_index = utils.build_tag_index(
     sentiment_constant.TAG_LIST, sentiment_constant.TAG_START_INDEX)
 
-# POS
+POS
 pos_model = POSTagger()
 pos_word_index = json.load(
     open('../../Thai_NLP_platform/Bailarn/pos/word_index.json'))
@@ -81,7 +81,7 @@ pos_tag_index = utils.build_tag_index(
     pos_constant.TAG_LIST, start_index=pos_constant.TAG_START_INDEX)
 pos_tag_index["<PAD>"] = 0
 
-# Keyword_expansion
+Keyword_expansion
 keyword_expansion_model = KeywordExpansion()
 
 
@@ -89,16 +89,16 @@ def tokenize(text):
     return tokenizer_model.predict(text)
 
 
-# def tag(model, vector_list):
-#     result = model.predict([vector_list])
-#     return result
+def tag(model, vector_list):
+    result = model.predict([vector_list])
+    return result
 
 
-# def pad(raw_y_train, max_num_words):
-#     padded_y_train = []
-#     for y in raw_y_train:
-#         padded_y_train.append((y + ([0] * max_num_words))[0:max_num_words])
-#     return padded_y_train
+def pad(raw_y_train, max_num_words):
+    padded_y_train = []
+    for y in raw_y_train:
+        padded_y_train.append((y + ([0] * max_num_words))[0:max_num_words])
+    return padded_y_train
 
 
 def round_up(vector):
@@ -293,6 +293,7 @@ def get_sentiment(request):
         y = sentiment_model.predict(vs.x, decode_tag=False)
         decoded_y_list = []
         confidence_list = []
+        print(y)
         for idx, confidence in enumerate(y[0]):
             # decoded_y[sentiment_inv_map[idx]] = confidence
             decoded_y_list.append(sentiment_inv_map[idx])
