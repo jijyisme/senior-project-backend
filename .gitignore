@@ -10,6 +10,9 @@ web_crawling_tester.ipynb
 db.sqlite3
 
 
+*.pyc
+
+
 nlp_tools/__pycache__/*
 
 

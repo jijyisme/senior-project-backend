@@ -5,25 +5,23 @@ import sys
 sys.setrecursionlimit(40000)
 sys.path.append('../../Thai_NLP_platform')
 
-from Bailarn.tokenizer.tokenizer import Tokenizer
-from Bailarn.word_embedder.word2vec import Word2Vec
-from Bailarn.ner.ner import NamedEntityRecognizer
-from Bailarn.pos.pos_tagger import POSTagger
-from Bailarn.categorization.categorization import Categorization
-from Bailarn.sentiment.analyzer import SentimentAnalyzer
-from Bailarn.keyword_expansion.keyword_expansion import KeywordExpansion
+from bailarn.tokenizer.tokenizer import Tokenizer
+from bailarn.word_embedder.word2vec import Word2Vec
+from bailarn.ner.ner import NamedEntityRecognizer
+from bailarn.pos.pos_tagger import POSTagger
+from bailarn.categorization.categorization import Categorization
+from bailarn.sentiment.analyzer import SentimentAnalyzer
+from bailarn.keyword_expansion.keyword_expansion import KeywordExpansion
 
-from Bailarn.utils import utils
-from Bailarn.utils import loader
+from bailarn.utils import utils
 
-from Bailarn.utils import co as constant
-from Bailarn.tokenizer import constant as tokenizer_constant
-from Bailarn.word_embedder import constant as word_embedder_constant
-from Bailarn.ner import constant as ner_constant
-from Bailarn.pos import constant as pos_constant
-from Bailarn.categorization import constant as categorization_constant
-from Bailarn.sentiment import constant as sentiment_constant
-from Bailarn.keyword_expansion import constant as keyword_expansion_constant
+from bailarn.tokenizer import constant as tokenizer_constant
+from bailarn.word_embedder import constant as word_embedder_constant
+from bailarn.ner import constant as ner_constant
+from bailarn.pos import constant as pos_constant
+from bailarn.categorization import constant as categorization_constant
+from bailarn.sentiment import constant as sentiment_constant
+from bailarn.keyword_expansion import constant as keyword_expansion_constant
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -52,36 +50,37 @@ w2v_model = Word2Vec()
 # Categorization
 categorization_model = Categorization()
 categorization_word_index = json.load(
-    open('../../Thai_NLP_platform/Bailarn/categorization/word_index.json'))
+    open('../../Thai_NLP_platform/bailarn/categorization/categorization_word_index.json'))
 categorization_tag_index = utils.build_tag_index(
     categorization_constant.TAG_LIST, categorization_constant.TAG_START_INDEX)
 
 # NER
 ner_model = NamedEntityRecognizer()
 ner_word_index = pickle.load(
-    open('../../Thai_NLP_platform/Bailarn/ner/word_index.pickle', 'rb'))
+    open('../../Thai_NLP_platform/bailarn/ner/ner_word_index.pickle', 'rb'))
 ner_word_index["<PAD>"] = 0
 ner_tag_index = utils.build_tag_index(
     ner_constant.TAG_LIST, start_index=ner_constant.TAG_START_INDEX)
 
 # Sentiment
-sentiment_model = SentimentAnalyzer(model_path='../../Thai_NLP_platform/Bailarn/sentiment/models/cnn_multi_2tag_e3.h5')
+sentiment_model = SentimentAnalyzer(
+    model_path='../../Thai_NLP_platform/bailarn/sentiment/models/cnn_multi_2tag_e3.h5')
 sentiment_word_index = pickle.load(
-    open('../../Thai_NLP_platform/Bailarn/sentiment/word_index.pickle', 'rb'))
+    open('../../Thai_NLP_platform/bailarn/sentiment/sentiment_word_index.pickle', 'rb'))
 sentiment_word_index.pop('<UNK>', None)
 sentiment_word_index['UNK'] = len(sentiment_word_index)
 sentiment_tag_index = utils.build_tag_index(
     sentiment_constant.TAG_LIST, sentiment_constant.TAG_START_INDEX)
 
-POS
+# POS
 pos_model = POSTagger()
 pos_word_index = json.load(
-    open('../../Thai_NLP_platform/Bailarn/pos/word_index.json'))
+    open('../../Thai_NLP_platform/bailarn/pos/pos_word_index.json'))
 pos_tag_index = utils.build_tag_index(
     pos_constant.TAG_LIST, start_index=pos_constant.TAG_START_INDEX)
 pos_tag_index["<PAD>"] = 0
 
-Keyword_expansion
+# Keyword_expansion
 keyword_expansion_model = KeywordExpansion()
 
 
@@ -230,14 +229,14 @@ def get_categorization(request):
         texts.add_text(input_string)
         vs = utils.build_input(texts, categorization_word_index,
                                categorization_tag_index, categorization_constant.SEQUENCE_LENGTH,
-                               needed_y='categorization', for_train=False)
+                               target='categorization', for_train=False)
         y = categorization_model.predict(vs.x,
-                                         #  thershold_selection="../../Thai_NLP_platform/Bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json",
+                                         #  thershold_selection="../../Thai_NLP_platform/bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json",
                                          decode_tag=False)
         categorization_inv_map = {v: k for k,
                                   v in categorization_tag_index.items()}
         thershold_selection_dict = json.load(open(
-            "../../Thai_NLP_platform/Bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json"))
+            "../../Thai_NLP_platform/bailarn/categorization/threshold_selection.json"))
         decoded_y_list = []
         confidence_list = []
         for idx, value in enumerate(y[0]):
@@ -251,17 +250,20 @@ def get_categorization(request):
         # Norm confidence list to be range of 0 to 1
         confidence_list, decoded_y_list = (list(t) for t in zip(
             *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
-
-        confidence_tag_list = []
-        for idx, confidence in enumerate(confidence_list):
-            confidence_tag = models.ConfidenceTag(
-                tag=decoded_y_list[idx], confidence=confidence)
-            confidence_tag.save()
-            confidence_tag_list.append(confidence_tag)
-        out = models.ConfidenceTagList(
-            confidence_tag_list=confidence_tag_list)
+        out = models.SimilarityList(
+            string_list=decoded_y_list, similarity_list=confidence_list)
         out.save()
-        serializer = serializers.ConfidenceTagListSerializer(out)
+        serializer = serializers.SimilarityListSerializer(out)
+        # confidence_tag_list = []
+        # for idx, confidence in enumerate(confidence_list):
+        #     confidence_tag = models.ConfidenceTag(
+        #         tag=decoded_y_list[idx], confidence=confidence)
+        #     confidence_tag.save()
+        #     confidence_tag_list.append(confidence_tag)
+        # out = models.ConfidenceTagList(
+        #     confidence_tag_list=confidence_tag_list)
+        # out.save()
+        # serializer = serializers.ConfidenceTagListSerializer(out)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -287,7 +289,7 @@ def get_sentiment(request):
         texts.add_text(input_string)
         vs = utils.build_input(texts, sentiment_word_index,
                                sentiment_tag_index, sentiment_constant.SEQUENCE_LENGTH,
-                               needed_y='sentiment', for_train=False)
+                               target='sentiment', for_train=False)
 
         sentiment_inv_map = {v: k for k, v in sentiment_tag_index.items()}
         y = sentiment_model.predict(vs.x, decode_tag=False)
@@ -301,17 +303,20 @@ def get_sentiment(request):
 
         confidence_list, decoded_y_list = (list(t) for t in zip(
             *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
-
-        confidence_tag_list = []
-        for idx, confidence in enumerate(confidence_list):
-            confidence_tag = models.ConfidenceTag(
-                tag=decoded_y_list[idx], confidence=confidence)
-            confidence_tag.save()
-            confidence_tag_list.append(confidence_tag)
-        out = models.ConfidenceTagList(
-            confidence_tag_list=confidence_tag_list)
+        out = models.SimilarityList(
+            string_list=decoded_y_list, similarity_list=confidence_list)
         out.save()
-        serializer = serializers.ConfidenceTagListSerializer(out)
+        serializer = serializers.SimilarityListSerializer(out)
+        # confidence_tag_list = []
+        # for idx, confidence in enumerate(confidence_list):
+        #     confidence_tag = models.ConfidenceTag(
+        #         tag=decoded_y_list[idx], confidence=confidence)
+        #     confidence_tag.save()
+        #     confidence_tag_list.append(confidence_tag)
+        # out = models.ConfidenceTagList(
+        #     confidence_tag_list=confidence_tag_list)
+        # out.save()
+        # serializer = serializers.ConfidenceTagListSerializer(out)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -340,7 +345,7 @@ def get_ner(request):
 
         vs = utils.build_input(ner_texts, ner_word_index,
                                ner_tag_index, ner_constant.SEQUENCE_LENGTH,
-                               needed_y='ner', for_train=False)
+                               target='ner', for_train=False)
 
         # remove padding
         y_pred = ner_model.predict(vs.x, decode_tag=True)[0][0:len(word_list)]
@@ -375,7 +380,7 @@ def get_pos(request):
 
         vs = utils.build_input(texts, pos_word_index,
                                pos_tag_index, pos_constant.SEQUENCE_LENGTH,
-                               needed_y='pos', for_train=False)
+                               target='pos', for_train=False)
         # remove padding
         y_pred = pos_model.predict(vs.x, decode_tag=True).flatten()[
             0:len(word_list)]
