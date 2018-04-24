@@ -80,12 +80,12 @@ pos_tag_index = utils.build_tag_index(
     pos_constant.TAG_LIST, start_index=pos_constant.TAG_START_INDEX)
 pos_tag_index["<PAD>"] = 0
 
-# Keyword_expansion
-keyword_expansion_model = KeywordExpansion()
-
 
 def tokenize(text):
     return tokenizer_model.predict(text)
+
+# Keyword_expansion
+keyword_expansion_model = KeywordExpansion(tokenizer=tokenize)
 
 
 def tag(model, vector_list):
