@@ -84,6 +84,7 @@ pos_tag_index["<PAD>"] = 0
 def tokenize(text):
     return tokenizer_model.predict(text)
 
+
 # Keyword_expansion
 keyword_expansion_model = KeywordExpansion(tokenizer=tokenize)
 
@@ -251,7 +252,7 @@ def get_categorization(request):
         confidence_list, decoded_y_list = (list(t) for t in zip(
             *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
         confidence_tag_list = []
-        for idx, confidence in enumerate(confidence_list):
+        for idx, confidence in enumerate(confidence_list[:5]):
             confidence_tag = models.ConfidenceTag(
                 tag=decoded_y_list[idx], confidence=confidence)
             confidence_tag.save()
