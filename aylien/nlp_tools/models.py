@@ -4,7 +4,6 @@ from django.db import models
 class StringList(models.Model):
     string_list = models.TextField()
 
-
 class VectorList(models.Model):
     string_list = models.TextField()
     vector_list = models.TextField()

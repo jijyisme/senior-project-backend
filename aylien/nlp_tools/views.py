@@ -37,7 +37,7 @@ import pickle
 
 # from django.views.decorators.csrf import csrf_exempt
 
-Tokenizer
+# Tokenizer
 tokenizer_model = Tokenizer()
 tokenizer_char_index = utils.build_tag_index(
     tokenizer_constant.CHARACTER_LIST, tokenizer_constant.CHAR_START_INDEX)
@@ -116,9 +116,9 @@ def vectorize(word_list):
         vector_list.append(vector)
     return vector_list
 
-    # #validate input string length
-    # if len(input_string) > 1000:
-    #     return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+    #validate input string length
+    if len(input_string) > 1000:
+        return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
 
 from bs4 import BeautifulSoup
@@ -153,7 +153,6 @@ def crawl_webpage(url_in):
             if(len(t) >= 200):
                 p_tag_lists = p_tag_lists + ' \n' + t
 
-    print('crawled words', p_tag_lists)
     return p_tag_lists
 
 
@@ -170,28 +169,30 @@ def crawl_webpage(url_in):
 @api_view(['POST'])
 def get_token(request):
     if request.method == 'POST':
-        # get input string
+        get input string
         if request.data['type'] == 'raw_text':
             input_string = request.data['text']
 
         elif request.data['type'] == 'webpage':
-            print("Crawl website!")
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token.save()
+                serializer = serializers.StringListSerializer(token)  
+                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
-        print(input_string)
         # tokenize the input
         word_list = tokenize(input_string)
-        # serialize output
+        serialize output
         token = models.StringList(string_list=word_list)
         token.save()
         serializer = serializers.StringListSerializer(token)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -206,7 +207,10 @@ def get_vector(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token.save()
+                serializer = serializers.StringListSerializer(token)  
+                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -236,7 +240,10 @@ def get_categorization(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token.save()
+                serializer = serializers.StringListSerializer(token)  
+                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -292,7 +299,10 @@ def get_sentiment(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token.save()
+                serializer = serializers.StringListSerializer(token)  
+                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -342,7 +352,10 @@ def get_ner(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token.save()
+                serializer = serializers.StringListSerializer(token)  
+                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -377,7 +390,10 @@ def get_pos(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token.save()
+                serializer = serializers.StringListSerializer(token)  
+                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -411,8 +427,11 @@ def get_keyword_expansion(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-
+                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token.save()
+                serializer = serializers.StringListSerializer(token)  
+                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+                
         # reject too long string
         if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
