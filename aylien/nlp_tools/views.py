@@ -63,8 +63,7 @@ ner_tag_index = utils.build_tag_index(
     ner_constant.TAG_LIST, start_index=ner_constant.TAG_START_INDEX)
 
 # Sentiment
-sentiment_model = SentimentAnalyzer(
-    model_path='../../Thai_NLP_platform/bailarn/sentiment/models/cnn_multi_2tag_e3.h5')
+sentiment_model = SentimentAnalyzer()
 sentiment_word_index = pickle.load(
     open('../../Thai_NLP_platform/bailarn/sentiment/sentiment_word_index.pickle', 'rb'))
 sentiment_word_index.pop('<UNK>', None)
@@ -121,6 +120,19 @@ def vectorize(word_list):
     #     return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
 
+from bs4 import BeautifulSoup
+import urllib.request
+def match_class(target):
+    # target = target.split()
+    def do_match(tag):
+        try:
+            classes = dict(tag.attrs)["class"]
+        except KeyError:
+            classes = ""
+        classes = classes.split()
+        return all(c in classes for c in target)
+    return do_match
+
 def crawl_webpage(url_in):
     with urllib.request.urlopen(url_in) as url:
         html = url.read()
@@ -131,11 +143,16 @@ def crawl_webpage(url_in):
         script.extract()  # rip it out
 
     p_tag_lists = ''
-    for p_tag in soup.findAll(['p', 'h1', 'h2']):
-        t = p_tag.text.replace('\n', '').replace(' ', '')
-        if(len(t) >= 200):
-            p_tag_lists = p_tag_lists + ' \n' + t
-    print('crawled words', type(p_tag_lists))
+    if 'pantip' in url_in:
+        p_tag_lists = soup.findAll("div", class_='display-post-story')[0].text
+   
+    else:      
+        for p_tag in soup.findAll(['p', 'h1', 'h2']):
+            t = p_tag.text.replace('\n', '').replace(' ', '')
+            if(len(t) >= 200):
+                p_tag_lists = p_tag_lists + ' \n' + t
+
+    print('crawled words', p_tag_lists)
     return p_tag_lists
 
 
@@ -161,7 +178,7 @@ def get_token(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
