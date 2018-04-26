@@ -188,7 +188,7 @@ def get_token(request):
 
         # tokenize the input
         word_list = tokenize(input_string)
-        serialize output
+        # serialize output
         token = models.StringList(string_list=word_list)
         token.save()
         serializer = serializers.StringListSerializer(token)
