@@ -169,7 +169,7 @@ def crawl_webpage(url_in):
 @api_view(['POST'])
 def get_token(request):
     if request.method == 'POST':
-        get input string
+        # get input string
         if request.data['type'] == 'raw_text':
             input_string = request.data['text']
 
