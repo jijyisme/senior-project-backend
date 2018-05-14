@@ -5,13 +5,13 @@ import sys
 sys.setrecursionlimit(40000)
 sys.path.append('../../Thai_NLP_platform')
 
-from bailarn.tokenizer.tokenizer import Tokenizer
-from bailarn.word_embedder.word2vec import Word2Vec
-from bailarn.ner.ner import NamedEntityRecognizer
-from bailarn.pos.pos_tagger import POSTagger
-from bailarn.categorization.categorization import Categorization
-from bailarn.sentiment.analyzer import SentimentAnalyzer
-from bailarn.keyword_expansion.keyword_expansion import KeywordExpansion
+from bailarn.tokenizer import Tokenizer
+from bailarn.word_embedder import Word2Vec
+from bailarn.ner import NamedEntityRecognizer
+from bailarn.pos import POSTagger
+from bailarn.categorization import Categorization
+from bailarn.sentiment import SentimentAnalyzer
+from bailarn.keyword_expansion import KeywordExpansion
 
 from bailarn.utils import utils
 
