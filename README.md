@@ -1,5 +1,5 @@
 # Backend Website 
-Backend using Django for Thai_NLP_Platform (also see (github)[https://github.com/KawinL/Thai_NLP_platform]) as a senior project for Computer Engineering, Chulalongkorn University (CP41)
+Backend using Django for Thai_NLP_Platform (also see https://github.com/KawinL/Thai_NLP_platform) as a senior project for Computer Engineering, Chulalongkorn University (CP41)
 
 # Installation
 
