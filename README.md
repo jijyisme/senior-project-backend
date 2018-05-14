@@ -15,15 +15,15 @@ the server will listening on port 8000
 
 ## RESTful documentation
 
-* [Tokenization](aylien/docs/tokenize.md) : `POST /tokenize/`
-* [Word Embedding](aylien/docs/vectorize.md) : `POST /vectorize/`
-* [Part-of-speech Tagging](aylien/docs/pos.md) : `POST /pos/`
-* [Named Entity Recognition](aylien/docs/ner.md) : `POST /ner/`
-* [Sentiment](aylien/docs/sentiment.md) : `POST /sentiment/`
-* [Categorization](aylien/docs/categorization.md) : `POST /categorization/`
-* [Keyword Expansion](aylien/docs/keyword_expansion.md) : `POST /keyword_expansion/`
-* [Get vector distance (for word embedding)](aylien/docs/vector_distance.md) : `POST /vector_distance/`
-* [Get tag lists](aylien/docs/model_taglist.md) : `POST /model_taglist/`
+* [Tokenization](docs/tokenize.md) : `POST /tokenize/`
+* [Word Embedding](docs/vectorize.md) : `POST /vectorize/`
+* [Part-of-speech Tagging](docs/pos.md) : `POST /pos/`
+* [Named Entity Recognition](docs/ner.md) : `POST /ner/`
+* [Sentiment](docs/sentiment.md) : `POST /sentiment/`
+* [Categorization](docs/categorization.md) : `POST /categorization/`
+* [Keyword Expansion](docs/keyword_expansion.md) : `POST /keyword_expansion/`
+* [Get vector distance (for word embedding)](docs/vector_distance.md) : `POST /vector_distance/`
+* [Get tag lists](docs/model_taglist.md) : `POST /model_taglist/`
 
 # File Functionality
 - `aylien/`: Contains url and setting files to fit the requirement of Django project.
