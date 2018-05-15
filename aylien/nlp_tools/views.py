@@ -5,13 +5,13 @@ import sys
 sys.setrecursionlimit(40000)
 sys.path.append('../../Thai_NLP_platform')
 
-from bailarn.tokenizer import Tokenizer
-from bailarn.word_embedder import Word2Vec
-from bailarn.ner import NamedEntityRecognizer
-from bailarn.pos import POSTagger
-from bailarn.categorization import Categorization
-from bailarn.sentiment import SentimentAnalyzer
-from bailarn.keyword_expansion import KeywordExpansion
+from bailarn.tokenizer.tokenizer import Tokenizer
+from bailarn.word_embedder.word2vec import Word2Vec
+from bailarn.ner.ner import NamedEntityRecognizer
+from bailarn.pos.pos_tagger import POSTagger
+from bailarn.categorization.categorization import Categorization
+from bailarn.sentiment.analyzer import SentimentAnalyzer
+from bailarn.keyword_expansion.keyword_expansion import KeywordExpansion
 
 from bailarn.utils import utils
 
@@ -116,13 +116,15 @@ def vectorize(word_list):
         vector_list.append(vector)
     return vector_list
 
-    #validate input string length
+    # validate input string length
     if len(input_string) > 1000:
         return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
 
 from bs4 import BeautifulSoup
 import urllib.request
+
+
 def match_class(target):
     # target = target.split()
     def do_match(tag):
@@ -133,6 +135,7 @@ def match_class(target):
         classes = classes.split()
         return all(c in classes for c in target)
     return do_match
+
 
 def crawl_webpage(url_in):
     with urllib.request.urlopen(url_in) as url:
@@ -146,24 +149,14 @@ def crawl_webpage(url_in):
     p_tag_lists = ''
     if 'pantip' in url_in:
         p_tag_lists = soup.findAll("div", class_='display-post-story')[0].text
-   
-    else:      
+
+    else:
         for p_tag in soup.findAll(['p', 'h1', 'h2']):
             t = p_tag.text.replace('\n', '').replace(' ', '')
             if(len(t) >= 200):
                 p_tag_lists = p_tag_lists + ' \n' + t
 
     return p_tag_lists
-
-
-# def decode_tag(y_pred, rev_tag_index):
-#     y_pred_decode = []
-#     for post in y_pred:
-#         temp = []
-#         for i in range(len(post)):
-#             temp.append(rev_tag_index[np.argmax(post[i])])
-#         y_pred_decode.append(temp)
-#     return y_pred_decode
 
 
 @api_view(['POST'])
@@ -177,10 +170,11 @@ def get_token(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token = models.StringList(
+                    string_list=["Sorry, The text from this URL cannot be retrieved."])
                 token.save()
-                serializer = serializers.StringListSerializer(token)  
-                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+                serializer = serializers.StringListSerializer(token)
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -207,10 +201,11 @@ def get_vector(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token = models.StringList(
+                    string_list=["Sorry, The text from this URL cannot be retrieved."])
                 token.save()
-                serializer = serializers.StringListSerializer(token)  
-                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+                serializer = serializers.StringListSerializer(token)
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -240,10 +235,11 @@ def get_categorization(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token = models.StringList(
+                    string_list=["Sorry, The text from this URL cannot be retrieved."])
                 token.save()
-                serializer = serializers.StringListSerializer(token)  
-                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+                serializer = serializers.StringListSerializer(token)
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -256,7 +252,6 @@ def get_categorization(request):
                                categorization_tag_index, categorization_constant.SEQUENCE_LENGTH,
                                target='categorization', for_train=False)
         y = categorization_model.predict(vs.x,
-                                         #  thershold_selection="../../Thai_NLP_platform/bailarn/categorization/cnn_xmtc_w2v_thershold_selection.json",
                                          decode_tag=False)
         categorization_inv_map = {v: k for k,
                                   v in categorization_tag_index.items()}
@@ -270,8 +265,6 @@ def get_categorization(request):
                 decoded_y_list.append(categorization_inv_map[idx])
                 confidence = (value - thershold)/(1-thershold)
                 confidence_list.append(confidence)
-                # print(categorization_inv_map[idx], confidence)
-                # print(thershold, idx)
         # Norm confidence list to be range of 0 to 1
         confidence_list, decoded_y_list = (list(t) for t in zip(
             *sorted(zip(confidence_list, decoded_y_list), reverse=True)))
@@ -299,10 +292,11 @@ def get_sentiment(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token = models.StringList(
+                    string_list=["Sorry, The text from this URL cannot be retrieved."])
                 token.save()
-                serializer = serializers.StringListSerializer(token)  
-                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+                serializer = serializers.StringListSerializer(token)
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -320,7 +314,6 @@ def get_sentiment(request):
         decoded_y_list = []
         confidence_list = []
         for idx, confidence in enumerate(y[0]):
-            # decoded_y[sentiment_inv_map[idx]] = confidence
             decoded_y_list.append(sentiment_inv_map[idx])
             confidence_list.append(confidence)
 
@@ -352,10 +345,11 @@ def get_ner(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token = models.StringList(
+                    string_list=["Sorry, The text from this URL cannot be retrieved."])
                 token.save()
-                serializer = serializers.StringListSerializer(token)  
-                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+                serializer = serializers.StringListSerializer(token)
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -390,10 +384,11 @@ def get_pos(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token = models.StringList(
+                    string_list=["Sorry, The text from this URL cannot be retrieved."])
                 token.save()
-                serializer = serializers.StringListSerializer(token)  
-                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+                serializer = serializers.StringListSerializer(token)
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
         # reject too long string
         if len(input_string) > 100000:
@@ -427,11 +422,12 @@ def get_keyword_expansion(request):
             url = request.data['url']
             input_string = crawl_webpage(url)
             if input_string == "":
-                token = models.StringList(string_list=["Sorry, The text from this URL cannot be retrieved."])
+                token = models.StringList(
+                    string_list=["Sorry, The text from this URL cannot be retrieved."])
                 token.save()
-                serializer = serializers.StringListSerializer(token)  
-                return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
-                
+                serializer = serializers.StringListSerializer(token)
+                return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+
         # reject too long string
         if len(input_string) > 100000:
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
